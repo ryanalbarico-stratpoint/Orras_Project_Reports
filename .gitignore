@@ -8,6 +8,9 @@ venv/
 # Graphify
 graphify-out/
 
+# Claude Code
+.claude/
+
 # Environment
 .env
 
