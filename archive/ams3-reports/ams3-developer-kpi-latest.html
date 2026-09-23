@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>AMS3 Developer KPI</title>
+<style>
+  :root {
+    --bg:#f7f7f5;--bg2:#ffffff;--bg3:#eef0ee;--bg4:rgba(90,96,90,.08);
+    --text:#20242a;--text2:#565f66;--text3:#868d93;--text4:#c7ccce;
+    --border:rgba(32,36,42,.12);--card:#ffffff;
+    --green:#3f8f5f;--green-bg:rgba(63,143,95,.08);--green-border:rgba(63,143,95,.24);--green-text:#2c6b45;
+    --red:#b3544a;--red-bg:rgba(179,84,74,.07);--red-border:rgba(179,84,74,.22);--red-text:#8a4038;
+    --blue:#3d6ea0;--blue-bg:rgba(61,110,160,.07);--blue-border:rgba(61,110,160,.22);--blue-text:#2c5074;
+    --purple:#7c68a0;--purple-bg:rgba(124,104,160,.07);--purple-border:rgba(124,104,160,.22);--purple-text:#5e4f7a;
+    --orange:#b3743a;--orange-bg:rgba(179,116,58,.07);--orange-border:rgba(179,116,58,.22);
+    --amber:#a5822c;--amber-bg:rgba(165,130,44,.08);--amber-border:rgba(165,130,44,.22);--amber-text:#7d6320;
+    --teal:#3f8f8a;--teal-bg:rgba(63,143,138,.07);--teal-border:rgba(63,143,138,.22);--teal-text:#2d6a66;
+    --violet:#7b74ab;--violet-bg:rgba(123,116,171,.07);--violet-border:rgba(123,116,171,.22);--violet-text:#5d5685;
+  }
+  html.dark {
+    --bg:#0d100d;--bg2:#171b17;--bg3:#20251f;--bg4:rgba(160,168,148,.1);
+    --text:#eef1e9;--text2:#abb3a3;--text3:#7f8579;--text4:#4f544a;
+    --border:rgba(255,255,255,.12);--card:rgba(23,27,23,.9);
+    --green:#5aab7c;--green-bg:rgba(90,171,124,.12);--green-border:rgba(90,171,124,.3);--green-text:#8fd1a8;
+    --red:#c47a70;--red-bg:rgba(196,122,112,.1);--red-border:rgba(196,122,112,.3);--red-text:#dba49c;
+    --blue:#6c96c2;--blue-bg:rgba(108,150,194,.1);--blue-border:rgba(108,150,194,.3);--blue-text:#a3c1de;
+    --purple:#a394c4;--purple-bg:rgba(163,148,196,.1);--purple-border:rgba(163,148,196,.3);--purple-text:#c7bcdc;
+    --orange:#c4914f;--orange-bg:rgba(196,145,79,.1);--orange-border:rgba(196,145,79,.3);
+    --amber:#c2a352;--amber-bg:rgba(194,163,82,.12);--amber-border:rgba(194,163,82,.3);--amber-text:#e0cb92;
+    --teal:#5aaaa4;--teal-bg:rgba(90,170,164,.1);--teal-border:rgba(90,170,164,.3);--teal-text:#93cfc9;
+    --violet:#a49dc9;--violet-bg:rgba(164,157,201,.1);--violet-border:rgba(164,157,201,.3);--violet-text:#c9c3e0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;padding:28px 20px;transition:background .3s,color .3s}
+  .wrap{max-width:1140px;margin:0 auto}
+  svg.icon{display:inline-block;vertical-align:-3px;flex-shrink:0}
+
+  .toggle{position:fixed;top:16px;right:16px;background:var(--bg2);border:1px solid var(--border);border-radius:50px;padding:6px 14px;cursor:pointer;font-size:13px;color:var(--text2);z-index:99;transition:all .3s;display:flex;align-items:center;gap:6px}
+  .toggle:hover{border-color:var(--text3)}
+
+  h1{text-align:center;font-size:22px;margin-bottom:4px}
+  .sub{text-align:center;color:var(--text2);font-size:12px;margin-bottom:4px}
+  .hint{text-align:center;color:var(--text3);font-size:10px;margin-bottom:22px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+  .db-badge{display:inline-flex;align-items:center;gap:4px;background:var(--teal-bg);border:1px solid var(--teal-border);border-radius:6px;padding:2px 8px;font-size:9px;color:var(--teal-text)}
+
+  .sec-title{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .sec-title::before{content:'';display:block;width:3px;height:14px;border-radius:2px;background:var(--amber);flex-shrink:0}
+  .section{margin-bottom:28px}
+
+  .team-health{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:28px}
+  .th-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .th-head h2{font-size:14px;font-weight:700}
+  .th-head .grade{font-size:13px;font-weight:800;padding:5px 16px;border-radius:20px;background:var(--blue-bg);border:1.5px solid var(--blue-border);color:var(--blue)}
+  .th-body{padding:16px 20px}
+  .health-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+  .hcard{border-radius:10px;padding:12px 14px;border:1px solid var(--border);background:var(--bg3);position:relative;cursor:default}
+  .hcard .tip-icon{position:absolute;top:8px;right:9px;font-size:10px;color:var(--text3);cursor:help;transition:color .2s}
+  .hcard:hover .tip-icon{color:var(--text2)}
+  .hcard .tip-box{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:10px;color:var(--text);line-height:1.6;width:210px;z-index:50;pointer-events:none;opacity:0;transition:opacity .2s;white-space:normal;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+  .hcard:hover .tip-box{opacity:1}
+  .hcard .tip-box::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:var(--border)}
+  .hcard .hc-icon{font-size:16px;margin-bottom:6px;opacity:.85}
+  .hcard .hc-title{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+  .hcard .hc-val{font-size:14px;font-weight:800;margin-bottom:2px}
+  .hcard .hc-sub{font-size:9px;color:var(--text3);line-height:1.4}
+  .hc-green{border-color:var(--green-border)!important;background:var(--green-bg)!important}
+  .hc-green .hc-val,.hc-green .hc-icon{color:var(--green)}
+  .hc-amber{border-color:var(--amber-border)!important;background:var(--amber-bg)!important}
+  .hc-amber .hc-val,.hc-amber .hc-icon{color:var(--amber)}
+  .hc-red{border-color:var(--red-border)!important;background:var(--red-bg)!important}
+  .hc-red .hc-val,.hc-red .hc-icon{color:var(--red)}
+  .narrative{background:var(--bg3);border-radius:8px;padding:14px 16px;font-size:11px;color:var(--text2);line-height:1.75;border-left:3px solid var(--amber)}
+  .narrative strong{color:var(--text)}
+  .narrative .good{color:var(--green)}
+  .narrative .warn{color:var(--amber)}
+  .narrative .bad{color:var(--red)}
+  .narrative .info{color:var(--blue)}
+
+  .bus-bar{margin-top:12px}
+  .bus-bar-label{font-size:9px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px}
+  .bus-track{display:flex;height:18px;border-radius:6px;overflow:hidden;gap:1px}
+  .bus-seg{display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:rgba(255,255,255,.85);transition:flex .3s;cursor:default;white-space:nowrap;overflow:hidden}
+  .bus-track-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+  .bus-leg-item{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text2)}
+  .bus-dot{width:8px;height:8px;border-radius:50%}
+
+  .filter-bar{position:sticky;top:0;z-index:20;background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+  .filter-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .filter-row:last-child{margin-bottom:0}
+  .filter-label{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;min-width:65px}
+  .ftag{display:inline-flex;align-items:center;padding:4px 11px;border-radius:20px;font-size:10px;cursor:pointer;border:1px solid var(--border);color:var(--text3);background:transparent;transition:all .15s;user-select:none;white-space:nowrap}
+  .ftag:hover{color:var(--text);border-color:var(--text3)}
+  .ftag.on{background:var(--amber-bg);border-color:var(--amber-border);color:var(--amber);font-weight:600}
+
+  .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:9px;margin-bottom:24px}
+  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+  .stat-card .val{font-size:26px;font-weight:800;line-height:1}
+  .stat-card .lbl{font-size:9px;color:var(--text3);margin-top:5px;letter-spacing:.5px;text-transform:uppercase}
+  .stat-card .sub-val{font-size:10px;color:var(--text2);margin-top:3px}
+
+  .chart-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+  .chart-box canvas{max-height:240px}
+  .chart-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+  .chart-3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:10px}
+
+  .leaderboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(195px,1fr));gap:10px}
+  .dev-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:13px 15px;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s}
+  .dev-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+  .rank-badge{position:absolute;top:10px;right:11px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+  .dev-card .dev-name{font-size:12px;font-weight:700;margin-bottom:9px;padding-right:26px;line-height:1.3}
+  .dev-card .kv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+  .dev-card .kv .k{font-size:9px;color:var(--text3)}
+  .dev-card .kv .v{font-size:11px;font-weight:600}
+  .dev-card .types{margin-top:7px;display:flex;flex-wrap:wrap;gap:2px}
+  .churn-bar{height:4px;border-radius:2px;background:var(--border);overflow:hidden;margin-top:3px}
+  .churn-fill{height:100%;border-radius:2px}
+
+  .architect-card{background:var(--bg2);border:1px dashed var(--amber-border);border-radius:12px;padding:13px 15px;position:relative;overflow:hidden;margin-top:10px}
+  .architect-badge{display:inline-flex;align-items:center;gap:5px;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:6px;padding:3px 9px;font-size:9px;color:var(--amber);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+
+  .pill{display:inline-block;font-size:8px;padding:1px 5px;border-radius:3px}
+  .pill-feat{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+  .pill-fix{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+  .pill-test{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+  .pill-refactor{background:var(--purple-bg);color:var(--purple);border:1px solid var(--purple-border)}
+  .pill-docs{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border)}
+  .pill-build{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal-border)}
+  .pill-merge{background:var(--violet-bg);color:var(--violet-text);border:1px solid var(--violet-border)}
+
+  .insights-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:10px}
+  .insight-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .15s}
+  .insight-card:hover{transform:translateY(-2px)}
+  .insight-head{padding:11px 14px;display:flex;align-items:center;gap:10px;justify-content:space-between}
+  .insight-head .dev-info{display:flex;align-items:center;gap:8px}
+  .insight-head .avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+  .insight-head .iname{font-size:12px;font-weight:700}
+  .insight-head .irole{font-size:9px;color:var(--text3);margin-top:1px}
+  .insight-head .score-badge{font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+  .insight-body{padding:11px 14px;background:var(--card);border-top:1px solid var(--border)}
+  .is{margin-bottom:9px}
+  .is:last-child{margin-bottom:0}
+  .is .ist{font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+  .is .isc{font-size:11px;color:var(--text2);line-height:1.65}
+  .is .isc strong{color:var(--text)}
+  .is .isc .good{color:var(--green)}
+  .is .isc .warn{color:var(--amber)}
+  .is .isc .info{color:var(--blue-text)}
+  .is .isc .bad{color:var(--red)}
+  .suggest-box{background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:6px;padding:7px 10px;font-size:10px;color:var(--amber-text);line-height:1.55;margin-top:4px}
+  .trend-dots{display:flex;gap:3px;align-items:flex-end;height:26px;margin-top:5px}
+  .trend-dot{flex:1;border-radius:2px 2px 0 0;min-height:3px;transition:all .3s}
+  .stat-mini-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px}
+  .stat-mini{background:var(--bg3);border-radius:5px;padding:4px 7px;font-size:9px}
+  .stat-mini .sm-v{font-size:11px;font-weight:700;color:var(--text);display:block}
+  .stat-mini .sm-l{color:var(--text3)}
+
+  .tbl-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:auto}
+  table{width:100%;border-collapse:collapse;font-size:11px;min-width:560px}
+  th{background:var(--bg3);padding:8px 11px;text-align:left;font-size:9px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap}
+  th:hover{color:var(--text)}
+  th.sorted{color:var(--amber)}
+  td{padding:8px 11px;border-bottom:1px solid var(--border);color:var(--text2);white-space:nowrap}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:var(--bg3);color:var(--text)}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .hl{color:var(--text);font-weight:600}
+  .rate-bar{height:4px;border-radius:2px;background:var(--border);overflow:hidden;margin-top:3px}
+  .rate-fill{height:100%;border-radius:2px}
+
+  .sep{border-top:1px dashed var(--border);margin:22px 0}
+  .foot{text-align:center;color:var(--text4);font-size:9px;margin-top:16px;line-height:1.6}
+
+  @media(max-width:700px){
+    .chart-2,.chart-3{grid-template-columns:1fr}
+    .stats-row{grid-template-columns:repeat(2,1fr)}
+    .leaderboard{grid-template-columns:repeat(2,1fr)}
+    .insights-grid{grid-template-columns:1fr}
+  }
+</style>
+
+<div class="toggle" id="themeToggle">
+  <span class="ti"></span> <span>Theme</span>
+</div>
+
+<div class="wrap">
+  <h1>AMS3 <span style="font-size:13px;color:var(--text3);font-weight:400">| Developer KPI Dashboard</span></h1>
+  <p class="sub">stratpoint-engineering/mptc-ams3 &middot; develop branch</p>
+  <div class="hint">
+    <span>Aug 10 &ndash; Sep 26, 2026 &nbsp;&middot;&nbsp; 7 Weeks &nbsp;&middot;&nbsp; 11 Contributors</span>
+    <span class="db-badge">Source: git log + gh pr list</span>
+  </div>
+
+  <!-- TEAM HEALTH -->
+  <div class="team-health">
+    <div class="th-head">
+      <h2>Overall Team Impression</h2>
+      <div class="grade"><svg class="icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="4" height="10" rx="1"/><rect x="10" y="5" width="4" height="15" rx="1"/><rect x="16" y="13" width="4" height="7" rx="1"/></svg> Team Grade: B+</div>
+    </div>
+    <div class="th-body">
+      <div class="health-grid" id="health-grid"></div>
+      <div class="narrative" id="narrative"></div>
+      <div class="bus-bar">
+        <div class="bus-bar-label">Contribution Concentration (% of total commits &mdash; active devs only)</div>
+        <div class="bus-track" id="bus-track"></div>
+        <div class="bus-track-legend" id="bus-legend"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTER -->
+  <div class="filter-bar">
+    <div class="filter-row">
+      <span class="filter-label">Week</span>
+      <div id="week-filters" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">Developer</span>
+      <div id="dev-filters" style="display:flex;gap:4px;flex-wrap:wrap"></div>
+    </div>
+  </div>
+
+  <!-- KPI TOTALS -->
+  <div class="stats-row" id="stats-row"></div>
+
+  <div class="section">
+    <div class="sec-title">Team Velocity</div>
+    <div class="chart-2">
+      <div class="chart-box"><canvas id="cCommits"></canvas></div>
+      <div class="chart-box"><canvas id="cPRs"></canvas></div>
+    </div>
+    <div class="chart-3">
+      <div class="chart-box"><canvas id="cLines"></canvas></div>
+      <div class="chart-box"><canvas id="cChurn"></canvas></div>
+      <div class="chart-box"><canvas id="cBus"></canvas></div>
+    </div>
+    <div class="chart-2">
+      <div class="chart-box"><canvas id="cTypes"></canvas></div>
+      <div class="chart-box"><canvas id="cTestRate"></canvas></div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="section">
+    <div class="sec-title">Developer Leaderboard <span style="font-size:9px;color:var(--text4);font-weight:400;letter-spacing:0">(filtered &middot; excludes Project Lead)</span></div>
+    <div class="leaderboard" id="leaderboard"></div>
+    <div id="architect-section"></div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="section">
+    <div class="sec-title">Developer Insights &amp; Remarks</div>
+    <div class="insights-grid" id="insights"></div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="section">
+    <div class="sec-title">PR Efficiency</div>
+    <div class="tbl-wrap"><table id="tbl-pr"></table></div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">Weekly Detail <span style="font-size:9px;color:var(--text4);font-weight:400;letter-spacing:0">(click column headers to sort)</span></div>
+    <div class="tbl-wrap"><table id="tbl-detail"></table></div>
+  </div>
+
+  <p class="foot">
+    Stratpoint Technologies &middot; AMS3 Developer KPI Dashboard &middot; Aug&ndash;Sep 2026 &middot; Source: Git + GitHub PRs &middot; Generated 2026-09-23<br>
+    Commit identities consolidated per contributor via mailmap. 138 commits from an unattributed automated identity (<span style="font-family:monospace">sim@local</span>) and 1 commit from a since-unmapped identity (Emery dela Cruz, single-commit footprint) are excluded from every figure above &mdash; no matching teammate was found in-repo for either; the current HEAD of develop (merge of PR #300) is authored by Karl Manuel Barce, not either excluded identity.<br>
+    2 commits on Pao Rogelio's Corporate-epic work (TASK-002 Customers List API, TASK-005 Data Table API) were recorded twice in git history under different hashes with identical diffs, verified via <span style="font-family:monospace">git patch-id</span> &mdash; a merge-mechanics duplicate, not double work. Counted once each; totals above reflect the correction (&minus;2 commits, &minus;508/&minus;8 lines). This supersedes the previous report's account of the same issue, which named 4 commits across TASK-002/004/005/006; re-verification against current history confirms only these 2 duplicate pairs remain &mdash; the discrepancy is noted, not resolved to a confirmed cause.<br>
+    Line-added/deleted figures exclude lockfile-only diffs (<span style="font-family:monospace">pnpm-lock.yaml</span>, <span style="font-family:monospace">package-lock.json</span>, <span style="font-family:monospace">yarn.lock</span>) from every count, including Ronaldo Dela Cruz's Week 1 push &mdash; the previous report's 27,556-line figure for that week included a 13,941-line lockfile diff from the initial dependency install; the underlying code diff is 13,615 lines.<br>
+    Per-developer notes below are grounded in real commit subjects, real PR titles/states, and the <span style="font-family:monospace">docs/dev-tasks/</span> assignment backlog (which only tracks 3 of the 10 non-lead developers by name); where none of those sources explain an observed pattern, that is stated rather than guessed.
+  </p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+// Fields: w=week_start, d=developer, c=commits, la=lines_added, ld=lines_deleted,
+//         f=feat, fx=fix, t=test, r=refactor, dc=docs, ch=chore, b=build, m=merge,
+//         po=prs_opened, pm=prs_merged
+const ROWS = [
+{w:'2026-08-10',d:'Bryan Matias',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-10',d:'Dardee Jay Calura',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-10',d:'Jan Rudolf Basoc',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-10',d:'Jerwin Ordillano',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-10',d:'Karl Manuel Barce',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-10',d:'Khirru Clyde Gavilo',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-10',d:'Kianna Alexandra Gragg',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-10',d:'Maureen Reyes',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-10',d:'Pao Rogelio',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-10',d:'Ronaldo Dela Cruz',c:18,la:13615,ld:324,f:3,fx:7,t:0,r:0,dc:4,ch:3,b:0,m:0,po:3,pm:3},
+{w:'2026-08-10',d:'Steven Palabyab',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-17',d:'Bryan Matias',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-17',d:'Dardee Jay Calura',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-17',d:'Jan Rudolf Basoc',c:8,la:4044,ld:201,f:6,fx:1,t:0,r:0,dc:1,ch:0,b:0,m:0,po:2,pm:2},
+{w:'2026-08-17',d:'Jerwin Ordillano',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-17',d:'Karl Manuel Barce',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-17',d:'Khirru Clyde Gavilo',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-17',d:'Kianna Alexandra Gragg',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-17',d:'Maureen Reyes',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-17',d:'Pao Rogelio',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-17',d:'Ronaldo Dela Cruz',c:26,la:1851,ld:361,f:3,fx:3,t:1,r:0,dc:13,ch:2,b:0,m:4,po:2,pm:2},
+{w:'2026-08-17',d:'Steven Palabyab',c:1,la:32,ld:13,f:1,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:1,pm:1},
+{w:'2026-08-24',d:'Bryan Matias',c:44,la:9751,ld:3142,f:19,fx:9,t:5,r:1,dc:7,ch:0,b:0,m:3,po:5,pm:3},
+{w:'2026-08-24',d:'Dardee Jay Calura',c:5,la:829,ld:52,f:4,fx:1,t:0,r:0,dc:0,ch:0,b:0,m:0,po:10,pm:5},
+{w:'2026-08-24',d:'Jan Rudolf Basoc',c:5,la:19568,ld:2688,f:2,fx:0,t:0,r:0,dc:1,ch:1,b:0,m:0,po:5,pm:5},
+{w:'2026-08-24',d:'Jerwin Ordillano',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-24',d:'Karl Manuel Barce',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-24',d:'Khirru Clyde Gavilo',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-24',d:'Kianna Alexandra Gragg',c:2,la:10741,ld:810,f:1,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:3,pm:3},
+{w:'2026-08-24',d:'Maureen Reyes',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-24',d:'Pao Rogelio',c:21,la:13056,ld:356,f:15,fx:2,t:0,r:0,dc:4,ch:0,b:0,m:3,po:18,pm:18},
+{w:'2026-08-24',d:'Ronaldo Dela Cruz',c:21,la:45827,ld:9790,f:6,fx:4,t:0,r:1,dc:5,ch:4,b:0,m:0,po:0,pm:0},
+{w:'2026-08-24',d:'Steven Palabyab',c:5,la:20196,ld:340,f:2,fx:1,t:0,r:0,dc:0,ch:0,b:0,m:1,po:8,pm:5},
+{w:'2026-08-31',d:'Bryan Matias',c:12,la:2830,ld:568,f:0,fx:11,t:1,r:0,dc:0,ch:0,b:0,m:5,po:4,pm:5},
+{w:'2026-08-31',d:'Dardee Jay Calura',c:3,la:3905,ld:407,f:1,fx:1,t:1,r:0,dc:0,ch:0,b:0,m:0,po:15,pm:12},
+{w:'2026-08-31',d:'Jan Rudolf Basoc',c:6,la:6038,ld:680,f:3,fx:3,t:0,r:0,dc:0,ch:0,b:0,m:0,po:7,pm:5},
+{w:'2026-08-31',d:'Jerwin Ordillano',c:5,la:794,ld:134,f:1,fx:3,t:0,r:1,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-31',d:'Karl Manuel Barce',c:5,la:892,ld:228,f:0,fx:4,t:1,r:0,dc:0,ch:0,b:0,m:1,po:1,pm:1},
+{w:'2026-08-31',d:'Khirru Clyde Gavilo',c:3,la:141,ld:21,f:2,fx:0,t:0,r:0,dc:1,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-31',d:'Kianna Alexandra Gragg',c:12,la:3518,ld:288,f:2,fx:7,t:0,r:0,dc:3,ch:0,b:0,m:3,po:6,pm:6},
+{w:'2026-08-31',d:'Maureen Reyes',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-08-31',d:'Pao Rogelio',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:8,po:29,pm:29},
+{w:'2026-08-31',d:'Ronaldo Dela Cruz',c:48,la:6651,ld:3160,f:11,fx:23,t:0,r:1,dc:8,ch:3,b:0,m:7,po:7,pm:7},
+{w:'2026-08-31',d:'Steven Palabyab',c:37,la:6252,ld:969,f:11,fx:20,t:1,r:0,dc:3,ch:2,b:0,m:2,po:8,pm:7},
+{w:'2026-09-07',d:'Bryan Matias',c:23,la:2254,ld:621,f:1,fx:18,t:4,r:0,dc:0,ch:0,b:0,m:7,po:8,pm:8},
+{w:'2026-09-07',d:'Dardee Jay Calura',c:13,la:7042,ld:1376,f:5,fx:5,t:2,r:0,dc:1,ch:0,b:0,m:0,po:17,pm:18},
+{w:'2026-09-07',d:'Jan Rudolf Basoc',c:18,la:33489,ld:5004,f:2,fx:13,t:1,r:0,dc:1,ch:0,b:0,m:0,po:16,pm:17},
+{w:'2026-09-07',d:'Jerwin Ordillano',c:45,la:11883,ld:1194,f:12,fx:22,t:7,r:0,dc:2,ch:2,b:0,m:8,po:9,pm:8},
+{w:'2026-09-07',d:'Karl Manuel Barce',c:38,la:6107,ld:589,f:11,fx:19,t:7,r:0,dc:1,ch:0,b:0,m:5,po:6,pm:5},
+{w:'2026-09-07',d:'Khirru Clyde Gavilo',c:74,la:22444,ld:1916,f:33,fx:26,t:8,r:0,dc:6,ch:1,b:0,m:6,po:5,pm:5},
+{w:'2026-09-07',d:'Kianna Alexandra Gragg',c:19,la:11954,ld:767,f:10,fx:5,t:2,r:0,dc:2,ch:0,b:0,m:1,po:1,pm:1},
+{w:'2026-09-07',d:'Maureen Reyes',c:29,la:8856,ld:754,f:16,fx:7,t:3,r:1,dc:1,ch:0,b:0,m:2,po:2,pm:2},
+{w:'2026-09-07',d:'Pao Rogelio',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:11,po:11,pm:11},
+{w:'2026-09-07',d:'Ronaldo Dela Cruz',c:14,la:2360,ld:567,f:4,fx:7,t:0,r:0,dc:1,ch:1,b:0,m:1,po:2,pm:2},
+{w:'2026-09-07',d:'Steven Palabyab',c:28,la:4295,ld:517,f:0,fx:20,t:2,r:0,dc:6,ch:0,b:0,m:3,po:4,pm:6},
+{w:'2026-09-14',d:'Bryan Matias',c:5,la:2005,ld:6,f:0,fx:2,t:1,r:0,dc:1,ch:0,b:0,m:2,po:4,pm:3},
+{w:'2026-09-14',d:'Dardee Jay Calura',c:12,la:2491,ld:675,f:1,fx:10,t:0,r:0,dc:0,ch:0,b:0,m:0,po:13,pm:12},
+{w:'2026-09-14',d:'Jan Rudolf Basoc',c:9,la:2684,ld:721,f:5,fx:4,t:0,r:0,dc:0,ch:0,b:0,m:0,po:11,pm:9},
+{w:'2026-09-14',d:'Jerwin Ordillano',c:56,la:3128,ld:796,f:3,fx:47,t:3,r:0,dc:2,ch:0,b:0,m:2,po:3,pm:3},
+{w:'2026-09-14',d:'Karl Manuel Barce',c:21,la:3762,ld:601,f:7,fx:9,t:0,r:2,dc:2,ch:0,b:0,m:3,po:6,pm:4},
+{w:'2026-09-14',d:'Khirru Clyde Gavilo',c:19,la:5646,ld:1071,f:5,fx:6,t:1,r:2,dc:3,ch:0,b:0,m:2,po:3,pm:3},
+{w:'2026-09-14',d:'Kianna Alexandra Gragg',c:37,la:6631,ld:1605,f:3,fx:20,t:7,r:1,dc:6,ch:0,b:0,m:5,po:6,pm:6},
+{w:'2026-09-14',d:'Maureen Reyes',c:12,la:4357,ld:247,f:3,fx:6,t:2,r:0,dc:1,ch:0,b:0,m:4,po:4,pm:4},
+{w:'2026-09-14',d:'Pao Rogelio',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:2,po:3,pm:3},
+{w:'2026-09-14',d:'Ronaldo Dela Cruz',c:18,la:1953,ld:174,f:2,fx:3,t:8,r:0,dc:2,ch:0,b:0,m:5,po:3,pm:3},
+{w:'2026-09-14',d:'Steven Palabyab',c:39,la:9918,ld:1716,f:1,fx:29,t:0,r:0,dc:8,ch:0,b:0,m:5,po:7,pm:7},
+{w:'2026-09-21',d:'Bryan Matias',c:1,la:56,ld:14,f:0,fx:1,t:0,r:0,dc:0,ch:0,b:0,m:1,po:0,pm:1},
+{w:'2026-09-21',d:'Dardee Jay Calura',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-09-21',d:'Jan Rudolf Basoc',c:3,la:4162,ld:1173,f:1,fx:2,t:0,r:0,dc:0,ch:0,b:0,m:0,po:2,pm:3},
+{w:'2026-09-21',d:'Jerwin Ordillano',c:13,la:1630,ld:216,f:4,fx:4,t:2,r:0,dc:2,ch:0,b:0,m:2,po:4,pm:2},
+{w:'2026-09-21',d:'Karl Manuel Barce',c:11,la:1170,ld:210,f:3,fx:5,t:1,r:1,dc:0,ch:1,b:0,m:6,po:5,pm:6},
+{w:'2026-09-21',d:'Khirru Clyde Gavilo',c:8,la:784,ld:99,f:2,fx:3,t:1,r:0,dc:1,ch:1,b:0,m:4,po:5,pm:4},
+{w:'2026-09-21',d:'Kianna Alexandra Gragg',c:2,la:1730,ld:102,f:1,fx:0,t:0,r:0,dc:0,ch:1,b:0,m:2,po:1,pm:1},
+{w:'2026-09-21',d:'Maureen Reyes',c:6,la:428,ld:198,f:0,fx:1,t:1,r:3,dc:0,ch:1,b:0,m:3,po:4,pm:3},
+{w:'2026-09-21',d:'Pao Rogelio',c:0,la:0,ld:0,f:0,fx:0,t:0,r:0,dc:0,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-09-21',d:'Ronaldo Dela Cruz',c:1,la:1224,ld:14,f:0,fx:0,t:0,r:0,dc:1,ch:0,b:0,m:0,po:0,pm:0},
+{w:'2026-09-21',d:'Steven Palabyab',c:7,la:230,ld:60,f:0,fx:4,t:1,r:0,dc:1,ch:1,b:0,m:2,po:3,pm:2},
+];
+
+const WEEKS     = ['2026-08-10','2026-08-17','2026-08-24','2026-08-31','2026-09-07','2026-09-14','2026-09-21'];
+const WEEK_LBLS = ['Aug 10','Aug 17','Aug 24','Aug 31','Sep 07','Sep 14','Sep 21'];
+// Active devs for leaderboard/charts (excludes Ronaldo, the project lead)
+const ALL_DEVS  = ['Bryan Matias','Pao Rogelio','Karl Manuel Barce','Jan Rudolf Basoc','Steven Palabyab','Jerwin Ordillano','Maureen Reyes','Kianna Alexandra Gragg','Dardee Jay Calura','Khirru Clyde Gavilo'];
+const ARCHITECT = 'Ronaldo Dela Cruz';
+
+// Minimal inline icon set (stroke=currentColor) — no external icon CDN is reachable from this page.
+function svg(inner, size){ return `<svg class="icon" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`; }
+const ICONS = {
+  velocity: svg('<line x1="4" y1="20" x2="4" y2="14"/><line x1="12" y1="20" x2="12" y2="9"/><line x1="20" y1="20" x2="20" y2="4"/>', 16),
+  shield:   svg('<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/>', 16),
+  merge:    svg('<circle cx="7" cy="18" r="2.3"/><circle cx="7" cy="6" r="2.3"/><circle cx="17" cy="6" r="2.3"/><path d="M7 8.3V15.7"/><path d="M17 8.3c0 5-4 5-8 7"/>', 16),
+  flask:    svg('<path d="M9 3h6"/><path d="M10 3v6l-5.5 9.5A2 2 0 0 0 6.2 21h11.6a2 2 0 0 0 1.7-3L14 9V3"/><path d="M7.5 15h9"/>', 16),
+  refresh:  svg('<path d="M20 12a8 8 0 1 1-2.6-5.9"/><polyline points="20 3 20 8 15 8"/>', 16),
+  users:    svg('<circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3.5 2.7-6 5.5-6s5.5 2.5 5.5 6"/><circle cx="17.5" cy="9" r="2.2"/><path d="M14.8 14.5c1-.5 2-.7 2.7-.7 2.3 0 4.3 2 4.3 4.7"/>', 16),
+  info:     svg('<circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="0.6" fill="currentColor" stroke="none"/>', 11),
+  sun:      svg('<circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4.5"/><line x1="12" y1="19.5" x2="12" y2="22"/><line x1="2" y1="12" x2="4.5" y2="12"/><line x1="19.5" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.1" y2="4.9"/>', 14),
+  moon:     svg('<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/>', 14),
+};
+
+const DEV_CFG = {
+  'Bryan Matias':            {color:'#3d6ea0', bg:'rgba(61,110,160,.75)',  initials:'BM'},
+  'Pao Rogelio':             {color:'#3f8f5f', bg:'rgba(63,143,95,.75)',   initials:'PR'},
+  'Karl Manuel Barce':       {color:'#3f8f8a', bg:'rgba(63,143,138,.75)',  initials:'KB'},
+  'Jan Rudolf Basoc':        {color:'#7c68a0', bg:'rgba(124,104,160,.75)', initials:'JB'},
+  'Steven Palabyab':         {color:'#4a90a4', bg:'rgba(74,144,164,.75)',  initials:'SP'},
+  'Jerwin Ordillano':        {color:'#a8637c', bg:'rgba(168,99,124,.75)',  initials:'JO'},
+  'Maureen Reyes':           {color:'#b3743a', bg:'rgba(179,116,58,.75)',  initials:'MR'},
+  'Kianna Alexandra Gragg':  {color:'#56708f', bg:'rgba(86,112,143,.75)',  initials:'KG'},
+  'Dardee Jay Calura':       {color:'#7a8f4a', bg:'rgba(122,143,74,.75)',  initials:'DC'},
+  'Khirru Clyde Gavilo':     {color:'#b3467c', bg:'rgba(179,70,124,.75)', initials:'KC'},
+  'Ronaldo Dela Cruz':       {color:'#a5822c', bg:'rgba(165,130,44,.75)',  initials:'RC'},
+};
+
+const INSIGHTS = {
+  'Bryan Matias': {
+    role:'Attachments &amp; Email Notifications',
+    score:'Notification System Owner',
+    trend:[0,0,44,12,23,5,1],
+    summary:'Bryan\'s scope, from his own commit history: the <strong>Attachments epic</strong> (upload/view/delete endpoints, classification, shared @ams3/attachments package) and the <strong>Email Notifications epic</strong> (BullMQ-queued dispatch, SendGrid/SMTP providers, all 14 notification templates for US-66&ndash;79), extended through September into a long tail of RFID/OR&rarr;SI Number copy fixes across Media Transfer, Replacement, and Reactivation emails, plus an entirely new <strong>Media Reactivation</strong> notification feature (US-80/81/82, PR #256). 85 commits (11.8% of team output), 20 of 21 PRs merged (95%).',
+    strength:'2nd-highest test-commit rate on the team (11 commits, 12.9%) and the only contributor who shipped a brand-new notification type this window on top of maintaining the existing 14. His churn is at least partly explained by real review-iteration commits in his own log &mdash; e.g. "fix: address code-review findings on notification dispatch/data assembly" and "refactor(attachments): reconcile duplicate implementations + apply review fixes" &mdash; not unexplained rework.',
+    concern:'<span class="warn">20.5% code churn</span>, the highest on the team, just above the 20% healthy line. Activity also tapered sharply after the Sep 07 week (23 commits) to 5 and then 1 &mdash; consistent with the Attachments/Notifications epics reaching a stable maintenance phase, not a data gap (his PRs kept merging at a normal cadence through Sep 21).',
+    suggestion:'Only #21 ("add reusable @ams3/attachments shared package") remains non-merged &mdash; closed Sep 3 without merging, around the same time the attachments package work continued elsewhere in his log, consistent with being superseded. No PRs are currently open for Bryan.',
+  },
+  'Pao Rogelio': {
+    role:'Corporate Epic &amp; Bulk-Data/Bulk-Processing Packages',
+    score:'PR Throughput Leader',
+    trend:[0,0,21,0,0,0,0],
+    summary:'Pao\'s scaffolding work &mdash; the <strong>Corporate epic</strong> (Customers List, Data Table, Account Details, Excel export) and the reusable <strong>@ams3/bulk-data</strong> orchestration package used by Bulk Deactivation/Processing &mdash; landed entirely in one week (Aug 24&ndash;28); all 21 of his own authored commits (after correcting for 2 that git history recorded twice under different hashes with identical diffs &mdash; TASK-002 Corporate Customers List API and TASK-005 Corporate Data Table API, see Methodology) fall in that single week. His PR-opening/merging activity, by contrast, continues at high volume for another 3+ weeks: 61 PRs opened, 61 merged, 100% &mdash; still the team\'s highest PR count by a wide margin.',
+    strength:'Unmatched, unbroken 100% PR merge rate across 61 PRs. Also fixed a real concurrency bug in that first week: "close process() TOCTOU race that could resurrect a completed job" in bulk-data.',
+    concern:'The gap between his 1-week commit-authorship window and his multi-week PR-opening/merging activity is real but not fully explained by git/PR metadata alone: many of his later PRs (e.g. #200, #206, #220, #226, #267) use the same "stratpoint-engineering/" branch-naming convention seen on Ronaldo\'s infra PRs, and their merge commits are authored under Pao\'s own git identity &mdash; whether this reflects a formal PR-shepherding/release role or a squash-merge authorship artifact isn\'t determinable from the data available here, so it is left as an open question rather than guessed.',
+    suggestion:'No non-merged PRs found for Pao in this window &mdash; all 61 merged.',
+  },
+  'Karl Manuel Barce': {
+    role:'Exempt Maintenance, Reports &amp; Permission-Gating Rollout',
+    score:'Permission-Gating Rollout',
+    trend:[0,0,0,5,38,21,11],
+    summary:'Karl\'s scope grew from Exempt\'s <strong>Maintenance module</strong> (Business Unit, Department, Expressway CRUD, a shared Maintenance CRUD service) and the <strong>Reports epic</strong> (Report Query Service, XLSX Export Service) into rolling real @ams3/security-client <strong>PermissionGuard</strong> checks across Enrollment, Maintenance, and Reports (PRs #240, #266, #276, #281, #286). 75 commits, 16 of 18 PRs merged (89%).',
+    strength:'Solid test-commit rate (9 commits, 12.0%, in the team\'s top cluster) and a clean permission-rollout track record &mdash; all 5 permission-gating PRs from Sep 15 onward merged same-day or next-day. Low churn (12.0%).',
+    concern:'Two non-merged PRs, both explainable: #204 ("resolve real AMS_USERS identity for Maintenance\'s CreatedBy/UpdatedBy") was closed unmerged Sep 11, then reopened as #232 with the identical goal and merged the same day &mdash; a straightforward redo, not lost work. #225 ("forward SSO token and enforce permission guard") was closed Sep 15, the same day broader permission work (#240) landed &mdash; consistent with being folded in, though this is inferred from timing, not confirmed against the PR body.',
+    suggestion:'No PRs are currently open for Karl; his last 8 PRs (Sep 17&ndash;22) all merged same-day.',
+  },
+  'Jan Rudolf Basoc': {
+    role:'Home/Customer Management',
+    score:'Consistency &amp; Scale',
+    trend:[0,8,5,6,18,9,3],
+    summary:'Jan\'s scope still matches the dev-task backlog closely (TASK-019 through TASK-048) &mdash; Account Search/Details, the Activation Reason Code modal, Media (Replacement/Transfer/Swap), and audit-event emission &mdash; and has grown to include syncing Media/Account status changes to the Toll Wallet API, wiring real AMS Security permission checks into Home\'s Login/Logout flow, and the cross-app AMS Cross-Check endpoint consumed by Exempt Registration. 49 commits, the only contributor active in every one of the 6 team-active weeks, 41 of 43 PRs merged (95%).',
+    strength:'Unmatched full-window consistency (active every active team-week) and the largest line volume on the team by far (+69,985), reflecting both the breadth of his ownership and the size of the Media/Toll-Wallet integration work.',
+    concern:'Test-commit tagging remains low (1 of 49 commits, 2.0%) &mdash; a tracked, known gap, not a mystery: TASK-047 ("Write frontend component tests") and TASK-048 ("Write integration tests for Home workflows") are still marked <strong>In Progress</strong> in docs/dev-tasks as of this report, each with a detailed retro on exactly what is and isn\'t covered yet.',
+    suggestion:'Two non-merged PRs: #116 (a requestAnimationFrame race fix, opened and closed the same day, Sep 4 &mdash; not an open item) and #231 ("Sign ORRAS customer sync with Custom Header Auth v1.0," closed unmerged Sep 15) &mdash; the same goal reappears in his later merged PRs #296/#297 (Sep 22), consistent with a redo under the team-wide Custom Header Auth v1.0 migration, not lost work.',
+  },
+  'Steven Palabyab': {
+    role:'Home (Customer Info/Attachments), REQ Registration, Reports &amp; Audit QA',
+    score:'Broadest Scope',
+    trend:[0,1,5,37,28,39,7],
+    summary:'Steven (tracked as "Charles" in docs/dev-tasks) has the widest module spread on the team: his original Home ownership (Customer Information, Address/Contact Details, Attachments dual-write) was joined in the Sep 02&ndash;04 week by building the entire <strong>REQ self-service registration</strong> backend (duplicate/email validation, OTP-style verification, Approver notification, outcome emails), then a QA-hardening pass across all 6 <strong>Reports</strong>, and from Sep 17 the <strong>Audit Logs</strong> screens. 117 commits (16.2% of team output), 28 of 31 PRs merged (90%).',
+    strength:'Tied for the team\'s lowest churn (8.1%) despite the widest module spread &mdash; his fixes land clean even when the scope jumps modules. Backlog cross-check confirms his Home and REQ tasks are marked Done.',
+    concern:'3 non-merged PRs, all explainable: #10 and merged PR #14 share the identical title ("Navigation: responsive layout&hellip;") &mdash; rework landing under a new PR number, not loss. #28 covered TASK-007/TASK-017, which the backlog shows Done under a different PR. #284 ("use one pre-defined signing key for Custom Header Auth v1.0," closed Sep 21) reappears merged the next day as #292 under a renamed scope &mdash; a same-day redo.',
+    suggestion:'No PRs are currently open for Steven; his two previously-open items (#72, #86) both merged by Sep 11.',
+  },
+  'Jerwin Ordillano': {
+    role:'Inventory Product Management &amp; Full Inventory Ownership',
+    score:'Highest Volume',
+    trend:[0,0,0,5,45,56,13],
+    summary:'Jerwin\'s scope grew from Product Management (Product API/export, ProductService, MediaType CRUD) into owning the RFID/Card/OR Inventory epics, the MOP Card CRUD API, the Dashboard\'s real server-side pagination/export, and &mdash; in the final two weeks &mdash; gating Inventory\'s UI and nav visibility behind real AMS Security permissions. 119 commits (16.5% of team output, the team\'s largest share), fix-heavy throughout (76 fix vs 20 feat). 13 of 16 PRs merged (81%).',
+    strength:'Highest raw commit count on the team, with a large fraction of that volume spent on QA/bug-fix hardening across consecutive "wave" cleanup passes on Product Listing, MOP Card, and RFID/Card/OR Inventory &mdash; the unglamorous but real stabilization work a fast-growing module needs.',
+    concern:'16.5% of team commits is the largest single concentration on the team, though still well under the 30% bus-factor risk line. His 81% PR merge rate is the team\'s lowest, but of the 3 non-merged PRs, only 2 (#298, #302) are genuinely open, both opened Sep 22 &mdash; the last day of this window, too new to call a review-cycle problem.',
+    suggestion:'#205 ("Fix Dashboard exhaustive-deps; backfill Prisma changelog") closed unmerged Sep 11, the same day the underlying fix landed via #202 &mdash; consistent with a duplicate PR, not lost work. #298 and #302 (both Sep 22) are the only real open items.',
+  },
+  'Maureen Reyes': {
+    role:'Exempt Registration &amp; Enrollment',
+    score:'Lowest Churn (tied)',
+    trend:[0,0,0,0,29,12,6],
+    summary:'Maureen\'s scope: the Exempt <strong>Registration</strong> epic (AMS Cross-Check Client, Reference-Data Read API, Registration Validation Service, Submission/Status Lookup APIs) and the full <strong>Enrollment Management</strong> epic (grid, status changes, GovRel two-stage routing, Toll Wallet sync, expiry-reminder scan, notification dispatch), plus wiring the team-wide Custom Header Auth v1.0 migration into Exempt\'s own audit-write client. 47 commits, all from Sep 07 onward; the 3-week gap the previous report flagged as unexplained is resolved by this window\'s data &mdash; she simply joined active development in the Sep 07 week and has been continuously active since (weeks 5, 6, and 7 all nonzero).',
+    strength:'Tied for the team\'s lowest churn (8.1%) and a 90% PR merge rate (9 of 10). Also fixed a real security issue and caught her own mistake in the same sitting: "use timing-safe comparison for cross-check shared secret," immediately reverted, then correctly reapplied one commit later as a dedupe into the shared @ams3/auth-sso package.',
+    concern:'No non-merged PRs found in her history for this window.',
+    suggestion:'No open or closed-unmerged PRs for Maureen in this window.',
+  },
+  'Kianna Alexandra Gragg': {
+    role:'Home/Reports (carried over) &amp; Inventory Upload/Bulk-Update Owner',
+    score:'Perfect PR Record',
+    trend:[0,0,2,12,19,37,2],
+    summary:'Kianna\'s scope expanded well beyond her earlier Home/Reports/cross-app work: she is now the sole owner of Inventory\'s entire <strong>Upload/Bulk-Update epic</strong> (templates, staging tables, Validate, Submit, audit-write integration, full @ams3/bulk-data orchestration &mdash; PRs #192, #274, #287) plus the <strong>Privacy Acknowledgment Gate</strong> (session-tied, mobile-responsive, TTL/idle-timeout hardening) and assorted NavBar work. 72 commits (10.0% of team output), 17 of 17 PRs merged &mdash; the only non-architect, non-PR-farming contributor with a perfect merge record at this volume.',
+    strength:'100% PR merge rate across 17 real feature PRs, and a genuine scope hand-off pattern: she picked up Inventory\'s Upload epic cold in the Sep 07 week and shipped it end-to-end within 3 weeks, including closing her own review findings ("address PR #192 review findings on Upload/Bulk Update").',
+    concern:'9.4% churn (in the team\'s lowest cluster) and no non-merged PRs &mdash; no material watch points found in this window.',
+    suggestion:'No open or closed-unmerged PRs for Kianna in this window.',
+  },
+  'Dardee Jay Calura': {
+    role:'Audit Module &amp; Reason Code Maintenance',
+    score:'High PR Frequency',
+    trend:[0,0,5,3,13,12,0],
+    summary:'Dardee\'s scope: the <strong>Audit module</strong> (AMS_Audit write API, User Activity Logs query/export, API Logs query/filter/export) and <strong>Reason Code Maintenance</strong> (CRUD, applicability, search/sort/pagination/export). 33 commits, 55 PRs opened, 47 merged (85%).',
+    strength:'Reason Code Maintenance and the Audit write/read APIs are fully landed and merged. Low churn (15.0%).',
+    concern:'8 of 55 opened PRs didn\'t merge. Correcting the previous report\'s account of this: the 3 early audit PRs it named as superseded (#96, #98, #101) were <em>themselves</em> also closed unmerged, not the replacements &mdash; the real replacement work is 9 granular merged PRs (#103, #108, #113, #115, #119, #120, #125, #130, #132) covering the same Prisma-schema/write-API/API-key scope. #127 ("AMS_Audit write API") stays explained: the equivalent work is in merged PR #140 covering the same TASK range.',
+    suggestion:'Only #259 ("resolve Performed By to a real name in User Activity Logs") remains open, from Sep 17 &mdash; about a week old as of this report.',
+  },
+  'Khirru Clyde Gavilo': {
+    role:'Security Module Owner (Group Role, Access Requests, User Management, Device Enrollment, Reports, Permission System)',
+    score:'Fastest Ramp-Up',
+    trend:[0,0,0,3,74,19,8],
+    summary:'Khirru\'s first commit lands Sep 4, and by the end of the window they own effectively the entire AMS3 <strong>Security</strong> module end to end: Group Role Management (list/CRUD/matrix/filter/export), the Access Requests epic (list/filter/export/decisions), User Management (directory, CRUD, stats, export), Device Enrollment (list/registration/edit), the Reports epic (engine/export/UI), and &mdash; from Sep 14 &mdash; the cross-cutting permission system itself (global PermissionGuard for SEC-AUTH-004/005, Permission Catalog Discovery, a permission-aware nav bar, fail-open-safe NavBar checks, and ORRAS Maintenance/Management permission-manifest discovery). 104 commits (14.4% of team output) across 4 active weeks &mdash; a single week (Sep 07) alone accounts for 74 commits, the largest one-week output by any non-architect contributor in this window. 12 of 13 PRs merged (92%).',
+    strength:'Discipline held up despite the pace: 10 test commits (9.6% test rate, above the team median) and a security-conscious streak of real hardening fixes in the Sep 11 week alone &mdash; closing a Device ID TOCTOU race, a check-then-act race in UserEditService, and duplicate-ID-Number validation gaps, all the same week as the features they protect.',
+    concern:'The Sep 07 week\'s 74-commit output is the most concentrated single-week delivery on the team this window; no data source explains why five separate epics (Group Role, Access Requests, User Management, Device Enrollment, Reports) all landed back-to-back in one week rather than staggered &mdash; stated as an open question, not a guessed cause.',
+    suggestion:'Only #301 ("hide Users table pagination when filter matches no rows") remains open, opened Sep 22 &mdash; the last day of this window, too new to call.',
+  },
+  'Ronaldo Dela Cruz': {
+    role:'Project Lead &middot; Architecture &amp; Delivery Oversight',
+    score:'LEAD',
+    trend:[18,26,21,48,14,18,1],
+    summary:'Ronaldo contributed 146 commits and +73,481/&minus;14,390 lines across the window &mdash; including the original 13,615-line Week 1 scaffold (Aug 10&ndash;16, mock auth/data shell plus real Azure AD SSO) before any teammate had landed a commit, a 48-commit week (Aug 31) coinciding with the team\'s platform-wide production-deploy rollout (Render&rarr;on-prem/EC2, per-module Dockerfiles, staging workflows for all 5 modules), and &mdash; new this window &mdash; migrating all 5 modules from Prisma db-push to migrate dev/deploy, adding shared @ams3/logger and @ams3/metrics packages, wiring the 15-minute idle-session timeout across all 5 apps, and a multi-day debugging effort (Sep 15, 8 consecutive "retest" commits) to get an ephemeral Fargate self-hosted CI runner working for the E2E suite. Not ranked against the team; his role is architecture, review, and delivery oversight rather than sprint velocity.',
+    strength:'Bootstrapped the project\'s infrastructure and remained the highest-throughput single contributor across most weeks of the window, including merging all 17 of his own PRs at a 100% rate. The Fargate CI migration (a real, honestly-logged trial-and-error sequence rather than a single clean commit) is a genuine platform-reliability investment, not scope creep.',
+    concern:'<span class="good">N/A</span> &mdash; excluded from peer comparison by role, not by data. His 16.4% churn is healthy for the volume and infrastructure-migration nature of the work involved.',
+    suggestion:'No non-merged PRs in his history for this window.',
+  },
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let activeWeeks = [...WEEKS];
+let activeDevs  = [...ALL_DEVS];
+let sortKey = 'c', sortDir = -1;
+let charts = {};
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const sum   = (arr, key) => arr.reduce((s,r)=>s+(r[key]||0),0);
+const fmtN  = n => n>=1000?(n/1000).toFixed(1)+'k':String(n);
+const fmtF  = n => n.toLocaleString();
+const churnPct = (la, ld) => la+ld>0 ? Math.round(ld/(la+ld)*100) : 0;
+const churnColor = pct => pct<=20?'var(--green)':pct<=30?'var(--amber)':'var(--red)';
+
+function filtered()         { return ROWS.filter(r=>activeWeeks.includes(r.w)&&activeDevs.includes(r.d)); }
+function filteredForDev(dev){ return ROWS.filter(r=>activeWeeks.includes(r.w)&&r.d===dev); }
+function allForDev(dev)     { return ROWS.filter(r=>r.d===dev); }
+function devTot(dev){
+  const rs=filteredForDev(dev);
+  return {dev,c:sum(rs,'c'),la:sum(rs,'la'),ld:sum(rs,'ld'),
+    f:sum(rs,'f'),fx:sum(rs,'fx'),t:sum(rs,'t'),r:sum(rs,'r'),
+    dc:sum(rs,'dc'),ch:sum(rs,'ch'),b:sum(rs,'b'),m:sum(rs,'m'),
+    po:sum(rs,'po'),pm:sum(rs,'pm')};
+}
+function weeklyDev(dev,key){ return activeWeeks.map(w=>{ const r=ROWS.find(x=>x.w===w&&x.d===dev); return r?(r[key]||0):0; }); }
+
+function isDark(){ return document.documentElement.classList.contains('dark'); }
+function gc(){ return isDark()?'rgba(255,255,255,.12)':'rgba(32,36,42,.12)'; }
+function tc(){ return isDark()?'#7f8579':'#868d93'; }
+function lc(){ return isDark()?'#abb3a3':'#565f66'; }
+function ttip(){ return {backgroundColor:isDark()?'#171b17':'#ffffff',titleColor:lc(),bodyColor:lc(),borderColor:isDark()?'rgba(255,255,255,.15)':'rgba(32,36,42,.15)',borderWidth:1}; }
+const aLbls = ()=>activeWeeks.map(w=>WEEK_LBLS[WEEKS.indexOf(w)]);
+
+// ── TEAM HEALTH ───────────────────────────────────────────────────────────────
+function renderTeamHealth(){
+  const cards = [
+    {icon:ICONS.velocity, title:'Avg Weekly Velocity',  val:'120 commits/wk',
+     sub:'722 total commits &middot; 6 active weeks &middot; 10 developers', cls:'hc-green'},
+    {icon:ICONS.shield, title:'Code Quality (Churn)', val:'11.2% team avg',
+     sub:'Steven/Maureen: 8.1% (best, tied) &middot; Bryan: 20.5% (watch)', cls:'hc-green'},
+    {icon:ICONS.merge, title:'PR Merge Rate',       val:'93%',
+     sub:'Kianna/Pao: 100% &middot; Jerwin: 81% (2 PRs opened Sep 22, too new to call)', cls:'hc-green'},
+    {icon:ICONS.flask, title:'Test Commit Rate',     val:'9.0%',
+     sub:'Bryan leads (12.9%) &middot; Pao: 0% &mdash; gap', cls:'hc-amber'},
+    {icon:ICONS.refresh, title:'Refactor Activity',    val:'12 commits',
+     sub:'Across 722 commits &mdash; likely under-tagged, not absent', cls:'hc-amber'},
+    {icon:ICONS.users, title:'Bus Factor Risk',      val:'LOW &middot; Jerwin 16.5%',
+     sub:'Well under the 20%/30% risk lines &mdash; broadened since last report', cls:'hc-green'},
+  ];
+
+  const METRIC_TIPS = {
+    'Avg Weekly Velocity': 'Total commits divided by active weeks. Measures the team\'s overall throughput and sprint consistency.',
+    'Code Quality (Churn)':'Lines deleted ÷ (lines added + deleted). High churn (>30%) means code is being rewritten frequently, signaling instability.',
+    'PR Merge Rate':       'Percentage of opened pull requests that were successfully merged. Higher = stronger delivery discipline.',
+    'Test Commit Rate':    'Percentage of commits explicitly tagged "test". A proxy for testing culture — low values signal tech debt risk.',
+    'Refactor Activity':   'Total commits tagged "refactor". Shows intentional code health investment beyond feature delivery.',
+    'Bus Factor Risk':     'How many devs would need to leave before the project stalls. HIGH if one person holds >30% of commits.',
+  };
+  document.getElementById('health-grid').innerHTML = cards.map(c=>`
+    <div class="hcard ${c.cls}">
+      <span class="tip-icon">${ICONS.info}</span>
+      <div class="tip-box">${METRIC_TIPS[c.title]||''}</div>
+      <div class="hc-icon">${c.icon}</div>
+      <div class="hc-title">${c.title}</div>
+      <div class="hc-val">${c.val}</div>
+      <div class="hc-sub">${c.sub}</div>
+    </div>`).join('');
+
+  document.getElementById('narrative').innerHTML = `The <strong>AMS3 team</strong> landed <strong>722 commits</strong> from 10 active developers over 6 active weeks (Aug 17&ndash;Sep 21)&mdash;after correcting for 2 commits that git history recorded twice for Pao Rogelio's Corporate-epic work (identical diffs merged under different hashes; see Methodology)&mdash;with a <strong>93% PR merge rate</strong> (264 of 285 opened) and a healthy <strong>11.2% average code churn</strong>. Two developers cross the 100-commit mark for the first time this window: Jerwin Ordillano (119, the team's largest single share at 16.5%, having grown from Product Management into owning all of Inventory) and Khirru Clyde Gavilo (104, a new contributor who single-handedly built and hardened the entire Security module &mdash; Group Role, Access Requests, User Management, Device Enrollment, Reports, and the permission system &mdash; in 4 weeks, including a 74-commit single week, the largest one-week output by any non-architect this window). Bus-factor risk, previously flagged MODERATE at 28.6% concentration, is now <span class="good">LOW</span>: the largest single share sits comfortably under both the 20% and 30% risk lines as the team has broadened. Jan Rudolf Basoc remains the only contributor active in every one of the 6 active weeks. Watch points: <span class="warn">test-commit tagging sits at 9.0%</span> team-wide (Pao shows none, a tracked process gap given his PR-shepherding role rather than a defect risk &mdash; see his entry), and refactor commits remain rare (12 of 722, 1.7%, likely under-tagged rather than truly absent). Bryan Matias now carries the team's highest churn (20.5%), narrowly above the 20% healthy line, with real review-iteration commits in his own log explaining part of it.`;
+
+  const totalC = 722;
+  const busData = [
+    {dev:'Jerwin Ordillano', c:119},
+    {dev:'Steven Palabyab', c:117},
+    {dev:'Khirru Clyde Gavilo', c:104},
+    {dev:'Bryan Matias', c:85},
+    {dev:'Karl Manuel Barce', c:75},
+    {dev:'Kianna Alexandra Gragg', c:72},
+    {dev:'Jan Rudolf Basoc', c:49},
+    {dev:'Maureen Reyes', c:47},
+    {dev:'Dardee Jay Calura', c:33},
+    {dev:'Pao Rogelio', c:21},
+  ].map(x=>({...x, color: DEV_CFG[x.dev].color, pct: Math.round(x.c/totalC*1000)/10}));
+  const busTrack = document.getElementById('bus-track');
+  const busLegend = document.getElementById('bus-legend');
+  busTrack.innerHTML = '';
+  busLegend.innerHTML = '';
+  busData.forEach(dc=>{
+    const seg = document.createElement('div');
+    seg.className = 'bus-seg';
+    seg.style.cssText = `flex:${dc.pct};background:${dc.color};min-width:${dc.pct<5?'0':'20px'}`;
+    seg.title = `${dc.dev}: ${dc.pct}%`;
+    seg.textContent = dc.pct>=8?`${dc.pct}%`:'';
+    busTrack.appendChild(seg);
+    const leg = document.createElement('div');
+    leg.className = 'bus-leg-item';
+    leg.innerHTML = `<div class="bus-dot" style="background:${dc.color}"></div>${dc.dev.split(' ')[0]}: ${dc.pct}%`;
+    busLegend.appendChild(leg);
+  });
+}
+
+// ── FILTER CONTROLS ───────────────────────────────────────────────────────────
+function buildFilters(){
+  const wf=document.getElementById('week-filters');
+  const df=document.getElementById('dev-filters');
+
+  const wAll=document.createElement('div');
+  wAll.className='ftag on'; wAll.id='wf-all'; wAll.textContent='All';
+  wAll.onclick=()=>{ activeWeeks=[...WEEKS]; document.querySelectorAll('.ftag-w').forEach(b=>b.classList.remove('on')); wAll.classList.add('on'); renderAll(); };
+  wf.appendChild(wAll);
+  WEEKS.forEach((w,i)=>{
+    const b=document.createElement('div'); b.className='ftag ftag-w'; b.textContent=WEEK_LBLS[i];
+    b.onclick=()=>{
+      wAll.classList.remove('on'); b.classList.toggle('on');
+      const sel=[...document.querySelectorAll('.ftag-w.on')].map(x=>WEEKS[WEEK_LBLS.indexOf(x.textContent)]);
+      activeWeeks=sel.length?sel:[...WEEKS];
+      if(!sel.length) wAll.classList.add('on');
+      renderAll();
+    };
+    wf.appendChild(b);
+  });
+
+  const dAll=document.createElement('div');
+  dAll.className='ftag on'; dAll.id='df-all'; dAll.textContent='All Devs';
+  dAll.onclick=()=>{ activeDevs=[...ALL_DEVS]; document.querySelectorAll('.ftag-d').forEach(b=>{ b.classList.remove('on'); b.style.background=''; b.style.color=''; }); dAll.classList.add('on'); renderAll(); };
+  df.appendChild(dAll);
+  ALL_DEVS.forEach(dev=>{
+    const cfg=DEV_CFG[dev];
+    const b=document.createElement('div'); b.className='ftag ftag-d';
+    b.style.borderColor=cfg.color+'55';
+    b.innerHTML=`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${cfg.color};margin-right:4px"></span>${dev.split(' ')[0]}`;
+    b._dev=dev;
+    b.onclick=()=>{
+      dAll.classList.remove('on'); b.classList.toggle('on');
+      b.style.background=b.classList.contains('on')?cfg.color+'18':'';
+      b.style.color=b.classList.contains('on')?cfg.color:'';
+      const sel=[...document.querySelectorAll('.ftag-d.on')].map(x=>x._dev);
+      activeDevs=sel.length?sel:[...ALL_DEVS];
+      if(!sel.length) dAll.classList.add('on');
+      renderAll();
+    };
+    df.appendChild(b);
+  });
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────────────
+function renderStats(){
+  const rows=filtered();
+  const tC=sum(rows,'c'),tPO=sum(rows,'po'),tPM=sum(rows,'pm'),tLA=sum(rows,'la'),tLD=sum(rows,'ld');
+  const rate=tPO>0?Math.round(tPM/tPO*100):0;
+  const churn=churnPct(tLA,tLD);
+  const testC=sum(rows,'t');
+  const cards=[
+    {val:fmtF(tC),   lbl:'Commits',      sub:`${activeDevs.length} devs &middot; ${activeWeeks.length} wks`,color:'var(--blue)'},
+    {val:fmtF(tPO),  lbl:'PRs Opened',   sub:`${rate}% merge rate`,                color:'var(--green)'},
+    {val:fmtF(tPM),  lbl:'PRs Merged',   sub:`${tPO-tPM} still open/closed`,       color:'var(--teal)'},
+    {val:fmtN(tLA),  lbl:'Lines Added',  sub:`net +${fmtN(tLA-tLD)}`,              color:'var(--purple)'},
+    {val:`${churn}%`,lbl:'Code Churn',   sub:churn<=20?'Healthy':'Watch closely',  color:churn<=20?'var(--green)':churn<=30?'var(--amber)':'var(--red)'},
+    {val:`${Math.round(testC/Math.max(tC,1)*100)}%`,lbl:'Test Commit Rate',sub:`${testC} test commits`,color:testC>20?'var(--blue)':'var(--red)'},
+  ];
+  document.getElementById('stats-row').innerHTML=cards.map(c=>`
+    <div class="stat-card" style="border-color:${c.color}33">
+      <div class="val" style="color:${c.color}">${c.val}</div>
+      <div class="lbl">${c.lbl}</div>
+      <div class="sub-val">${c.sub}</div>
+    </div>`).join('');
+}
+
+// ── LEADERBOARD ───────────────────────────────────────────────────────────────
+function renderLeaderboard(){
+  const totals=activeDevs.map(devTot).sort((a,b)=>b.c-a.c);
+  function pills(t){
+    return [{cls:'pill-feat',l:'feat',v:t.f},{cls:'pill-fix',l:'fix',v:t.fx},
+            {cls:'pill-test',l:'test',v:t.t},{cls:'pill-refactor',l:'rfctr',v:t.r},
+            {cls:'pill-docs',l:'docs',v:t.dc},{cls:'pill-build',l:'build',v:t.b}]
+      .filter(p=>p.v>0).sort((a,b)=>b.v-a.v).slice(0,4)
+      .map(p=>`<span class="pill ${p.cls}">${p.l} ${p.v}</span>`).join('');
+  }
+  document.getElementById('leaderboard').innerHTML=totals.map((t,i)=>{
+    const cfg=DEV_CFG[t.dev];
+    const rate=t.po>0?Math.round(t.pm/t.po*100):0;
+    const churn=churnPct(t.la,t.ld);
+    const rateCol=rate>=90?'var(--green)':rate>=75?'var(--amber)':'var(--red)';
+    const churnCol=churnColor(churn);
+    const wks=activeWeeks.length||4;
+    return `
+    <div class="dev-card" style="border-color:${cfg.color}44">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${cfg.color}"></div>
+      <div class="rank-badge">${i+1}</div>
+      <div class="dev-name" style="color:${cfg.color}">${t.dev}</div>
+      <div class="kv"><span class="k">Commits</span><span class="v">${fmtF(t.c)}</span></div>
+      <div class="kv"><span class="k">PRs Merged / Opened</span><span class="v">${t.pm} / ${t.po}</span></div>
+      <div class="kv"><span class="k">Merge Rate</span><span class="v" style="color:${rateCol}">${rate}%</span></div>
+      <div class="kv"><span class="k">Lines Added</span><span class="v">+${fmtN(t.la)}</span></div>
+      <div class="kv"><span class="k">Code Churn</span><span class="v" style="color:${churnCol}">${churn}%</span></div>
+      <div class="churn-bar"><div class="churn-fill" style="width:${Math.min(churn,50)*2}%;background:${churnCol}"></div></div>
+      <div class="kv" style="margin-top:4px"><span class="k">Avg Commits/Week</span><span class="v">${(t.c/wks).toFixed(1)}</span></div>
+      <div class="types">${pills(t)}</div>
+    </div>`;
+  }).join('');
+
+  const archAll = allForDev(ARCHITECT);
+  const archC  = sum(archAll,'c');
+  const archLA = sum(archAll,'la');
+  const archLD = sum(archAll,'ld');
+  const archCh = churnPct(archLA,archLD);
+  const archCfg= DEV_CFG[ARCHITECT];
+  document.getElementById('architect-section').innerHTML = `
+    <div class="architect-card">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${archCfg.color}"></div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px">
+          <div class="architect-badge">Project Lead</div>
+          <div class="dev-name" style="color:${archCfg.color};font-size:13px">${ARCHITECT}</div>
+          <div style="font-size:9px;color:var(--text3);margin-bottom:8px">Not included in velocity rankings &mdash; different contribution model</div>
+          <div class="kv"><span class="k">Total Commits (all-time)</span><span class="v">${archC}</span></div>
+          <div class="kv"><span class="k">Lines Added</span><span class="v">+${fmtN(archLA)}</span></div>
+          <div class="kv"><span class="k">Code Churn</span><span class="v" style="color:${churnColor(archCh)}">${archCh}%</span></div>
+        </div>
+        <div style="flex:2;min-width:220px;font-size:10px;color:var(--text2);line-height:1.7;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:8px;padding:10px 13px">
+          <strong style="color:var(--amber);font-size:9px;letter-spacing:1px;text-transform:uppercase">Role Summary</strong><br>
+          Ronaldo bootstrapped the AMS3 codebase and its architecture &mdash; including a 27,556-line Week 1 push (Aug 10&ndash;16) before any teammate had landed a commit.
+          Maintains oversight with high-impact commits every week of the window. <span style="color:var(--green)">Excluded from developer rankings</span> &mdash; operates as project lead, not sprint velocity contributor.
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── CHARTS ────────────────────────────────────────────────────────────────────
+function buildCharts(){
+  if(charts.c1) Object.values(charts).forEach(c=>c.destroy()); charts={};
+  const ds=activeDevs;
+  const lo={responsive:true,maintainAspectRatio:true};
+  const lgd={labels:{color:lc(),font:{size:9},boxWidth:9,padding:7}};
+  const ttO=ttip();
+  function title(text){return{display:true,text,color:lc(),font:{size:10,weight:'600'},padding:{bottom:6}};}
+  function axes(sx=false,sy=false,cbY=null){
+    return{x:{stacked:sx,grid:{color:gc()},ticks:{color:tc(),font:{size:9}}},
+           y:{stacked:sy,grid:{color:gc()},ticks:{color:tc(),font:{size:9},callback:cbY||undefined}}};
+  }
+
+  charts.c1=new Chart(document.getElementById('cCommits'),{type:'bar',data:{
+    labels:aLbls(),
+    datasets:ds.map(d=>({label:d.split(' ')[0],data:weeklyDev(d,'c'),backgroundColor:DEV_CFG[d].bg,borderColor:DEV_CFG[d].color,borderWidth:1,borderRadius:2}))
+  },options:{...lo,plugins:{legend:lgd,tooltip:ttO,title:title('Weekly Commits')},scales:axes(true,true)}});
+
+  charts.c2=new Chart(document.getElementById('cPRs'),{type:'line',data:{
+    labels:aLbls(),
+    datasets:ds.map(d=>({label:d.split(' ')[0],data:weeklyDev(d,'po'),borderColor:DEV_CFG[d].color,backgroundColor:DEV_CFG[d].bg.replace('.75','.1'),borderWidth:2,pointRadius:3,tension:0.35,fill:false}))
+  },options:{...lo,plugins:{legend:lgd,tooltip:ttO,title:title('PRs Opened per Week')},scales:axes()}});
+
+  charts.c3=new Chart(document.getElementById('cLines'),{type:'bar',data:{
+    labels:aLbls(),
+    datasets:ds.map(d=>({label:d.split(' ')[0],data:weeklyDev(d,'la'),backgroundColor:DEV_CFG[d].bg,borderColor:DEV_CFG[d].color,borderWidth:1,borderRadius:2}))
+  },options:{...lo,plugins:{legend:lgd,tooltip:ttO,title:title('Lines Added per Week')},
+    scales:axes(true,true,v=>v>=1000?(v/1000).toFixed(0)+'k':v)}});
+
+  const churnData=ALL_DEVS.map(d=>{
+    const rs=filteredForDev(d);
+    return churnPct(sum(rs,'la'),sum(rs,'ld'));
+  });
+  charts.c4=new Chart(document.getElementById('cChurn'),{type:'bar',data:{
+    labels:ALL_DEVS.map(d=>d.split(' ')[0]),
+    datasets:[{
+      label:'Churn %', data:churnData,
+      backgroundColor:churnData.map(v=>v<=20?'rgba(63,143,95,.65)':v<=30?'rgba(165,130,44,.65)':'rgba(179,84,74,.65)'),
+      borderColor:churnData.map(v=>v<=20?'#3f8f5f':v<=30?'#a5822c':'#b3544a'),
+      borderWidth:1,borderRadius:4,
+    },{
+      label:'Healthy max (20%)',type:'line',
+      data:ALL_DEVS.map(()=>20),
+      borderColor:'rgba(63,143,95,.5)',borderDash:[4,3],borderWidth:1,pointRadius:0,fill:false,
+    }]
+  },options:{...lo,plugins:{legend:lgd,tooltip:ttO,title:title('Code Churn Rate (%)')},
+    scales:{x:{grid:{color:gc()},ticks:{color:tc(),font:{size:9}}},
+            y:{grid:{color:gc()},ticks:{color:tc(),font:{size:9},callback:v=>v+'%'},max:50,min:0}}}});
+
+  charts.c5=new Chart(document.getElementById('cBus'),{type:'doughnut',data:{
+    labels:ALL_DEVS.map(d=>d.split(' ')[0]),
+    datasets:[{data:ALL_DEVS.map(d=>sum(allForDev(d),'c')),
+      backgroundColor:ALL_DEVS.map(d=>DEV_CFG[d].bg),
+      borderColor:ALL_DEVS.map(d=>DEV_CFG[d].color),borderWidth:1.5}]
+  },options:{...lo,cutout:'60%',plugins:{legend:lgd,tooltip:ttO,title:title('Commit Concentration (Active Devs)')}}});
+
+  const tMap={feat:'f',fix:'fx',test:'t',refactor:'r',docs:'dc',build:'b',merge:'m'};
+  const tBg={feat:'rgba(63,143,95,.75)',fix:'rgba(179,84,74,.75)',test:'rgba(61,110,160,.75)',
+             refactor:'rgba(124,104,160,.75)',docs:'rgba(165,130,44,.75)',build:'rgba(63,143,138,.75)',merge:'rgba(123,116,171,.55)'};
+  charts.c6=new Chart(document.getElementById('cTypes'),{type:'bar',data:{
+    labels:ds.map(d=>d.split(' ')[0]),
+    datasets:Object.entries(tMap).map(([name,key])=>({label:name,data:ds.map(d=>sum(filteredForDev(d),key)),backgroundColor:tBg[name],borderWidth:0,borderRadius:2}))
+  },options:{...lo,indexAxis:'y',plugins:{legend:lgd,tooltip:ttO,title:title('Commit Types by Developer')},scales:axes(true,true)}});
+
+  // Test commits vs total commits per dev — single shared axis (both are commit counts)
+  charts.c7=new Chart(document.getElementById('cTestRate'),{type:'bar',data:{
+    labels:ALL_DEVS.map(d=>d.split(' ')[0]),
+    datasets:[{
+      label:'Test commits',
+      data:ALL_DEVS.map(d=>sum(filteredForDev(d),'t')),
+      backgroundColor:'rgba(61,110,160,.7)',borderColor:'#3d6ea0',borderWidth:1,borderRadius:4,
+    },{
+      label:'Total commits',type:'line',
+      data:ALL_DEVS.map(d=>sum(filteredForDev(d),'c')),
+      borderColor:'rgba(148,163,184,.5)',borderDash:[4,3],borderWidth:1,pointRadius:0,fill:false,
+    }]
+  },options:{...lo,plugins:{legend:lgd,tooltip:ttO,title:title('Test Commits vs Total Commits')},
+    scales:axes(false,false)}});
+}
+
+// ── INSIGHTS ─────────────────────────────────────────────────────────────────
+function renderInsights(){
+  const insightDevs = [...ALL_DEVS, ARCHITECT];
+  document.getElementById('insights').innerHTML=insightDevs.map(dev=>{
+    const cfg=DEV_CFG[dev];
+    const ins=INSIGHTS[dev];
+    const t=devTot(dev);
+    const isActive=dev===ARCHITECT?true:activeDevs.includes(dev);
+    const rate=t.po>0?Math.round(t.pm/t.po*100):0;
+    const churn=churnPct(t.la,t.ld);
+    const rateCol=rate>=90?'var(--green)':rate>=75?'var(--amber)':'var(--red)';
+    const maxT=Math.max(...ins.trend,1);
+    const dots=WEEKS.map((w,i)=>{
+      const h=Math.max(3,Math.round((ins.trend[i]/maxT)*26));
+      return `<div class="trend-dot" style="height:${h}px;background:${cfg.color};opacity:${activeWeeks.includes(w)?1:0.2}"></div>`;
+    }).join('');
+    const isArch = dev===ARCHITECT;
+    const archLabel = isArch ? `<span style="font-size:8px;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);border-radius:3px;padding:1px 5px;margin-left:5px">Project Lead</span>` : '';
+    return `
+    <div class="insight-card" style="border-color:${cfg.color}33;opacity:${isActive?1:0.4}${isArch?';border-style:dashed':''}">
+      <div class="insight-head" style="background:${cfg.color}10;border-bottom:1px solid ${cfg.color}22">
+        <div class="dev-info">
+          <div class="avatar" style="background:${cfg.color}20;color:${cfg.color};border:1.5px solid ${cfg.color}44">${cfg.initials}</div>
+          <div><div class="iname" style="color:${cfg.color}">${dev}${archLabel}</div><div class="irole">${ins.role}</div></div>
+        </div>
+        <div class="score-badge" style="background:${cfg.color}14;color:${cfg.color};border:1px solid ${cfg.color}33">${ins.score}</div>
+      </div>
+      <div class="insight-body">
+        <div class="is">
+          <div class="ist">7-Week Commit Trend</div>
+          <div class="trend-dots">${dots}</div>
+          <div class="stat-mini-row">
+            <div class="stat-mini"><span class="sm-v" style="color:${cfg.color}">${fmtF(t.c)}</span><span class="sm-l">commits</span></div>
+            <div class="stat-mini"><span class="sm-v">${t.po}</span><span class="sm-l">PRs opened</span></div>
+            <div class="stat-mini"><span class="sm-v" style="color:${rateCol}">${rate>0?rate+'%':'—'}</span><span class="sm-l">merge rate</span></div>
+            <div class="stat-mini"><span class="sm-v" style="color:${churnColor(churn)}">${churn}%</span><span class="sm-l">churn</span></div>
+            <div class="stat-mini"><span class="sm-v">+${fmtN(t.la)}</span><span class="sm-l">lines</span></div>
+          </div>
+        </div>
+        <div class="is"><div class="ist">Summary</div><div class="isc">${ins.summary}</div></div>
+        <div class="is"><div class="ist">Strengths</div><div class="isc">${ins.strength}</div></div>
+        <div class="is"><div class="ist">Watch Points</div><div class="isc">${ins.concern}</div></div>
+        <div class="is"><div class="ist">Open Items / Notes</div><div class="suggest-box">${ins.suggestion}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── PR TABLE ──────────────────────────────────────────────────────────────────
+function renderPRTable(){
+  const totals=activeDevs.map(devTot).sort((a,b)=>b.po-a.po);
+  const head=`<thead><tr><th>Developer</th><th class="num">PRs Opened</th><th class="num">PRs Merged</th><th>Merge Rate</th><th class="num">Avg PR Size</th><th class="num">Lines Added</th><th class="num">Code Churn</th><th class="num">Avg/Week</th></tr></thead>`;
+  const body='<tbody>'+totals.map(t=>{
+    const cfg=DEV_CFG[t.dev];
+    const rate=t.po>0?Math.round(t.pm/t.po*100):0;
+    const avgSz=t.po>0?Math.round(t.la/t.po):0;
+    const churn=churnPct(t.la,t.ld);
+    const rateCol=rate>=90?'var(--green)':rate>=75?'var(--amber)':'var(--red)';
+    const churnCol=churnColor(churn);
+    return `<tr>
+      <td class="hl" style="color:${cfg.color}">${t.dev}</td>
+      <td class="num">${t.po}</td><td class="num">${t.pm}</td>
+      <td style="min-width:120px"><span style="color:${rateCol};font-weight:700">${rate}%</span>
+        <div class="rate-bar"><div class="rate-fill" style="width:${rate}%;background:${rateCol}"></div></div></td>
+      <td class="num">+${fmtF(avgSz)}</td>
+      <td class="num">+${fmtF(t.la)}</td>
+      <td class="num" style="color:${churnCol};font-weight:700">${churn}%</td>
+      <td class="num">${(t.po/activeWeeks.length).toFixed(1)}/wk</td>
+    </tr>`;
+  }).join('')+'</tbody>';
+  document.getElementById('tbl-pr').innerHTML=head+body;
+}
+
+// ── DETAIL TABLE ──────────────────────────────────────────────────────────────
+function renderDetailTable(){
+  const allRows = ROWS.filter(r=>activeWeeks.includes(r.w)&&(activeDevs.includes(r.d)||r.d===ARCHITECT));
+  let data=[...allRows].sort((a,b)=>sortDir*(b[sortKey]-a[sortKey]));
+  const churnKey='_churn';
+  data=data.map(r=>({...r,[churnKey]:churnPct(r.la,r.ld)}));
+
+  const cols=[
+    {k:'w',   lbl:'Week',     fn:r=>`<span style="color:var(--text3)">${WEEK_LBLS[WEEKS.indexOf(r.w)]}</span>`},
+    {k:'d',   lbl:'Developer',fn:r=>{
+      const isArch=r.d===ARCHITECT;
+      const col=DEV_CFG[r.d]?.color||'var(--text)';
+      const archTag=isArch?` <span style="font-size:8px;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:2px;padding:0 4px">lead</span>`:'';
+      return `<span class="hl" style="color:${col}">${r.d}${archTag}</span>`;
+    }},
+    {k:'c',   lbl:'Commits',  fn:r=>`<b>${r.c}</b>`},
+    {k:'po',  lbl:'PRs Open', fn:r=>r.po},
+    {k:'pm',  lbl:'PRs Merge',fn:r=>r.pm},
+    {k:'la',  lbl:'+Lines',   fn:r=>`<span style="color:var(--green)">+${fmtF(r.la)}</span>`},
+    {k:'ld',  lbl:'-Lines',   fn:r=>`<span style="color:var(--red)">-${fmtF(r.ld)}</span>`},
+    {k:churnKey,lbl:'Churn',  fn:r=>`<span style="color:${churnColor(r[churnKey])};font-weight:600">${r[churnKey]}%</span>`},
+    {k:'f',   lbl:'feat',     fn:r=>r.f  ?`<span class="pill pill-feat">${r.f}</span>` :'<span style="color:var(--text4)">—</span>'},
+    {k:'fx',  lbl:'fix',      fn:r=>r.fx ?`<span class="pill pill-fix">${r.fx}</span>` :'<span style="color:var(--text4)">—</span>'},
+    {k:'t',   lbl:'test',     fn:r=>r.t  ?`<span class="pill pill-test">${r.t}</span>` :'<span style="color:var(--text4)">—</span>'},
+    {k:'r',   lbl:'refactor', fn:r=>r.r  ?`<span class="pill pill-refactor">${r.r}</span>`:'<span style="color:var(--text4)">—</span>'},
+    {k:'m',   lbl:'merge',    fn:r=>r.m  ?`<span class="pill pill-merge">${r.m}</span>` :'<span style="color:var(--text4)">—</span>'},
+  ];
+  const head=`<thead><tr>${cols.map(c=>`<th class="${c.k===sortKey?'sorted':''}" onclick="setSortKey('${c.k}')">${c.lbl}${c.k===sortKey?(sortDir>0?' ↑':' ↓'):''}</th>`).join('')}</tr></thead>`;
+  const body='<tbody>'+data.map(r=>`<tr>${cols.map(c=>`<td>${c.fn(r)}</td>`).join('')}</tr>`).join('')+'</tbody>';
+  document.getElementById('tbl-detail').innerHTML=head+body;
+}
+
+function setSortKey(k){ if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;} renderDetailTable(); }
+
+// ── RENDER ALL ────────────────────────────────────────────────────────────────
+function renderAll(){ renderStats(); renderLeaderboard(); buildCharts(); renderInsights(); renderPRTable(); renderDetailTable(); }
+
+(function(){
+  const btn = document.querySelector('.toggle');
+  const ti = btn.querySelector('.ti');
+  function paintToggleIcon(){ ti.innerHTML = isDark() ? ICONS.moon : ICONS.sun; }
+  paintToggleIcon();
+  btn.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+    paintToggleIcon();
+    setTimeout(buildCharts, 320);
+  });
+})();
+renderTeamHealth();
+buildFilters();
+renderAll();
+</script>
+</body></html>
