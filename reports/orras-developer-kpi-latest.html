@@ -174,6 +174,37 @@
     .leaderboard{grid-template-columns:repeat(2,1fr)}
     .insights-grid{grid-template-columns:1fr}
   }
+
+  /* Developer Ranking */
+  .rankbar-list{display:flex;flex-direction:column;gap:8px}
+  .rankbar-row{display:grid;grid-template-columns:150px 1fr 48px;gap:12px;align-items:center}
+  .rankbar-name{font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;gap:6px;align-items:baseline}
+  .rankbar-name .rn{color:var(--text3);font-weight:500;width:14px;flex-shrink:0}
+  .rankbar-track{position:relative;height:18px;background:var(--bg3);border-radius:4px;overflow:hidden}
+  .rankbar-track .rg{position:absolute;top:0;bottom:0;width:1px;background:var(--border)}
+  .rankbar-stack{height:100%;display:flex}
+  .rankbar-seg{height:100%}
+  .rankbar-seg+.rankbar-seg{box-shadow:-2px 0 0 var(--bg3)}
+  .rankbar-score{font-size:11px;font-weight:700;text-align:right;color:var(--text)}
+  .rankbar-scale{display:grid;grid-template-columns:150px 1fr 48px;gap:12px;font-size:9px;color:var(--text3);margin-bottom:4px}
+  .rankbar-scale div:nth-child(2){position:relative;height:12px}
+  .rankbar-scale div:nth-child(2) span{position:absolute;left:50%;transform:translateX(-50%)}
+  .rankbar-scale div:nth-child(2) span:first-child{left:0;transform:translateX(0)}
+  .rankbar-scale div:nth-child(2) span:last-child{left:100%;transform:translateX(-100%)}
+  .rank-legend{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+  .rank-leg-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+  .rank-leg-head{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+  .rank-leg-sw{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+  .rank-leg-name{font-size:11px;font-weight:700;color:var(--text)}
+  .rank-leg-weight{margin-left:auto;font-size:9px;color:var(--text3)}
+  .rank-leg-measure{font-size:10px;color:var(--text2);line-height:1.5;margin-bottom:6px}
+  .rank-leg-src{font-size:9px;color:var(--text3);line-height:1.5;padding-top:6px;border-top:1px dashed var(--border)}
+  @media(max-width:700px){
+    .rank-legend{grid-template-columns:repeat(2,1fr)}
+    .rankbar-row,.rankbar-scale{grid-template-columns:100px 1fr 40px}
+  }
+
+
 </style>
 
 <div class="toggle" id="themeToggle">
@@ -264,7 +295,22 @@
     <div class="tbl-wrap"><table id="tbl-detail"></table></div>
   </div>
 
-  <p class="foot">
+  
+  <div class="sep"></div>
+
+  <div class="section">
+    <div class="sec-title">Developer Ranking <span style="font-size:9px;color:var(--text4);font-weight:400;letter-spacing:0">(composite score, 0-100, filtered)</span></div>
+    <div class="rankbar-scale">
+      <div></div>
+      <div><span>0</span><span style="left:25%">25</span><span style="left:50%">50</span><span style="left:75%">75</span><span>100</span></div>
+      <div></div>
+    </div>
+    <div class="rankbar-list" id="rankbarList"></div>
+    <div class="rank-legend" id="rankLegend"></div>
+  </div>
+
+  
+<p class="foot">
     Stratpoint Technologies &middot; ORRAS Developer KPI Dashboard &middot; Aug&ndash;Sep 2026 &middot; Source: Git + GitHub PRs &middot; Generated 2026-09-23<br>
     Commit identities consolidated per contributor via the report config\'s people/exclude mapping. No commits in this window matched the configured exclude list (session/merge-bot identities) &mdash; every one of the 409 raw commits in this window resolved to a named contributor.<br>
     Line-added/deleted figures exclude lockfile-only diffs (<span style="font-family:monospace">pnpm-lock.yaml</span>, <span style="font-family:monospace">package-lock.json</span>, <span style="font-family:monospace">yarn.lock</span>) from every count &mdash; 39,588 lines of lockfile churn were excluded from the totals above, including from Ronaldo Dela Cruz\'s Week 1 push.<br>
@@ -349,6 +395,8 @@ const WEEK_LBLS = ['Aug 10','Aug 17','Aug 24','Aug 31','Sep 07','Sep 14','Sep 21
 // Active devs for leaderboard/charts (excludes Ronaldo, the project lead)
 const ALL_DEVS  = ['Rhymuiel Surio','Bryan Matias','Jeanesa Dugang','Joe Palala','Bille Lagarde','Jan Rudolf Basoc','Pao Rogelio','Dardee Jay Calura'];
 const ARCHITECT = 'Ronaldo Dela Cruz';
+
+
 
 // Minimal inline icon set (stroke=currentColor) — no external icon CDN is reachable from this page.
 function svg(inner, size){ return `<svg class="icon" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`; }
@@ -874,7 +922,73 @@ function renderDetailTable(){
 function setSortKey(k){ if(sortKey===k)sortDir*=-1;else{sortKey=k;sortDir=-1;} renderDetailTable(); }
 
 // ── RENDER ALL ────────────────────────────────────────────────────────────────
-function renderAll(){ renderStats(); renderLeaderboard(); buildCharts(); renderInsights(); renderPRTable(); renderDetailTable(); }
+
+// -- DEVELOPER RANKING --------------------------------------------------------
+const RANK_WEIGHTS = {volume:0.30, delivery:0.30, consistency:0.25, health:0.15};
+const RANK_CRITERIA = [
+  {key:'volume',      label:'Volume',      color:'var(--blue)',   weight:30,
+   measures:'Commit count across the developers and weeks currently in view.',
+   source:'ROWS[].c - the same commit counts used by the charts above (git log).'},
+  {key:'delivery',    label:'Delivery',    color:'var(--purple)', weight:30,
+   measures:'Share of opened pull requests that were merged.',
+   source:'ROWS[].pm / ROWS[].po - the same figures as "PRs Opened per Week".'},
+  {key:'consistency', label:'Consistency', color:'var(--teal)',   weight:25,
+   measures:'Weeks with at least one commit, divided by weeks in view.',
+   source:'Derived from ROWS[].c across the active week filter.'},
+  {key:'health',      label:'Code Health', color:'var(--orange)', weight:15,
+   measures:'Inverse of deletion-heavy churn, capped at 50%.',
+   source:'100 minus churn%, reusing churnPct() from the Code Churn Rate chart.'},
+];
+
+function percentileRank(values, v){
+  const s=[...values].sort((a,b)=>a-b);
+  return s.length ? s.filter(x=>x<=v).length/s.length*100 : 0;
+}
+function devConsistency(dev){
+  const wks = activeWeeks.length || 1;
+  const active = activeWeeks.filter(w => (ROWS.find(r=>r.w===w&&r.d===dev)||{c:0}).c > 0).length;
+  return active/wks*100;
+}
+function computeRanking(){
+  const totals = activeDevs.map(devTot);
+  const volAll    = totals.map(t=>t.c);
+  const delivAll  = totals.map(t=>t.po>0 ? t.pm/t.po*100 : 0);
+  const consAll   = totals.map(t=>devConsistency(t.dev));
+  const healthAll = totals.map(t=>100-Math.min(churnPct(t.la,t.ld),50)*2);
+  return totals.map((t,i)=>{
+    const seg = {
+      volume:      RANK_WEIGHTS.volume      * percentileRank(volAll, t.c),
+      delivery:    RANK_WEIGHTS.delivery    * percentileRank(delivAll, delivAll[i]),
+      consistency: RANK_WEIGHTS.consistency * percentileRank(consAll, consAll[i]),
+      health:      RANK_WEIGHTS.health      * percentileRank(healthAll, healthAll[i]),
+    };
+    return {dev:t.dev, seg, score:Object.values(seg).reduce((a,b)=>a+b,0)};
+  }).sort((a,b)=>b.score-a.score);
+}
+function renderRanking(){
+  const ranked = computeRanking();
+  document.getElementById('rankbarList').innerHTML = ranked.map((r,i)=>{
+    const segs = RANK_CRITERIA.map(c=>`<div class="rankbar-seg" style="width:${r.seg[c.key]}%;background:${c.color}"></div>`).join('');
+    return `
+    <div class="rankbar-row" title="${r.dev}: ${r.score.toFixed(1)}">
+      <div class="rankbar-name"><span class="rn">${i+1}</span>${r.dev}</div>
+      <div class="rankbar-track">
+        <div class="rg" style="left:25%"></div><div class="rg" style="left:50%"></div><div class="rg" style="left:75%"></div>
+        <div class="rankbar-stack" style="width:${r.score}%">${segs}</div>
+      </div>
+      <div class="rankbar-score">${r.score.toFixed(1)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('rankLegend').innerHTML = RANK_CRITERIA.map(c=>`
+    <div class="rank-leg-card">
+      <div class="rank-leg-head"><span class="rank-leg-sw" style="background:${c.color}"></span><span class="rank-leg-name">${c.label}</span><span class="rank-leg-weight">${c.weight}%</span></div>
+      <div class="rank-leg-measure">${c.measures}</div>
+      <div class="rank-leg-src">${c.source}</div>
+    </div>`).join('');
+}
+
+
+function renderAll(){ renderStats(); renderLeaderboard(); buildCharts(); renderInsights(); renderPRTable(); renderDetailTable(); renderRanking(); }
 
 (function(){
   const btn = document.querySelector('.toggle');
